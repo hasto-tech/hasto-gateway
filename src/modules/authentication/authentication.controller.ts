@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Param, Headers, Body } from '@nestjs/common';
 
 import { RedisService } from 'src/services/redis.service';
+import { HashcashService } from 'src/services/hashcash.service';
 
 import EthCrypto from 'eth-crypto';
 import { utils } from 'ethers';
@@ -12,8 +13,12 @@ export class AuthenticationController {
 
   @Get('request-challange/:ethereumAddress')
   async getAuthenticationChallange(
+    @Headers('hashcash') hashcashSolution: number,
     @Param('ethereumAddress') ethereumAddress: string,
   ) {
+    if (!HashcashService.verify(4, 2, hashcashSolution)) {
+      return { error: true, message: 'Invalid hashcash' };
+    }
     const isValidAddress = utils.isHexString(ethereumAddress);
 
     if (!isValidAddress) {
