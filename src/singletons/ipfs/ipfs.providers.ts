@@ -1,9 +1,6 @@
 import ipfsHttpClient = require('ipfs-http-client');
 import { IPFS_PROVIDER } from '../../utils/constants';
 
-
-
-
 export const ipfsProviders = [
   {
     provide: IPFS_PROVIDER,
