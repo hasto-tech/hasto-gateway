@@ -1,24 +1,34 @@
-import { Controller, Get, Post, Param, Headers, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Headers,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 
 import { RedisService } from 'src/services/redis.service';
-import { HashcashService } from 'src/services/hashcash.service';
 
 import EthCrypto from 'eth-crypto';
 import { utils } from 'ethers';
 import { randomBytes } from 'crypto';
+import { JwtService } from 'src/services/jwt.service';
+import { AuthTokenGuard } from 'src/guards/authtoken.guard';
+import { HashcashGuard } from 'src/guards/hashcash.guard';
 
 @Controller('auth')
 export class AuthenticationController {
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Get('request-challange/:ethereumAddress')
+  @UseGuards(HashcashGuard)
   async getAuthenticationChallange(
-    @Headers('hashcash') hashcashSolution: number,
     @Param('ethereumAddress') ethereumAddress: string,
   ) {
-    if (!HashcashService.verify(4, 2, hashcashSolution)) {
-      return { error: true, message: 'Invalid hashcash' };
-    }
     const isValidAddress = utils.isHexString(ethereumAddress);
 
     if (!isValidAddress) {
@@ -28,7 +38,7 @@ export class AuthenticationController {
     const randomness = randomBytes(7).toString('hex');
 
     await this.redisService.setValue(
-      `${ethereumAddress}-challange`,
+      `${ethereumAddress}-challenge`,
       randomness,
       5000,
     );
@@ -36,30 +46,38 @@ export class AuthenticationController {
     return { error: false, randomness };
   }
 
-  @Post('face-challange')
-  async faceAuthenticationChallange(
+  @Post('face-challenge')
+  @UseGuards(AuthTokenGuard)
+  async faceAuthenticationChallenge(
     @Headers('signature') signature: string,
     @Body() faceAuthenticationChallangeDto: { ethereumAddress: string },
   ) {
     const randomness = await this.redisService.getValue(
-      `${faceAuthenticationChallangeDto.ethereumAddress}-challange`,
+      `${faceAuthenticationChallangeDto.ethereumAddress}-challenge`,
     );
 
     if (!randomness) {
       return {
         error: true,
-        message: `challange for ${faceAuthenticationChallangeDto.ethereumAddress} expired or not found`,
+        message: `challenge for ${faceAuthenticationChallangeDto.ethereumAddress} expired or not found`,
       };
     }
 
-    const recoveredSigner = EthCrypto.recover(signature, randomness);
-    const isSignatureValid =
-      recoveredSigner === faceAuthenticationChallangeDto.ethereumAddress;
+    try {
+      const recoveredSigner = EthCrypto.recover(signature, randomness);
+      const isSignatureValid =
+        recoveredSigner === faceAuthenticationChallangeDto.ethereumAddress;
 
-    if (!isSignatureValid) {
+      if (!isSignatureValid) {
+        return {
+          error: true,
+          message: `Invalid signature`,
+        };
+      }
+    } catch (err) {
       return {
         error: true,
-        message: `Invalid signature`,
+        message: `error while recovering the signature: ${err.message}`,
       };
     }
 

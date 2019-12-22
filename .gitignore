@@ -2,3 +2,5 @@ node_modules
 dump.rdb
 config.json
 .env
+dist
+yarn-error.log
