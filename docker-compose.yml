@@ -8,7 +8,7 @@ services:
     ports:
       - '8088:3000'
     networks:
-      - backend
+      - hasto
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
@@ -19,12 +19,23 @@ services:
     ports:
       - '6379:6379'
     networks:
-      - backend
+      - hasto
   mongoDB:
     image: mongo
     ports:
       - '27017:27017'
     networks:
-      - backend
+      - hasto
+  ipfs_host:
+    image: ipfs/go-ipfs
+    ports:
+      - '8080:8080'
+      - '5001:5001'
+      - '4001:4001'
+    networks:
+      - hasto
+    volumes:
+      - ./ipfs_data/:/home/ipfs/ipfs_data
+      - ./ipfs_staging/:/home/ipfs/ipfs_staging
 networks:
-  backend:
+  hasto:

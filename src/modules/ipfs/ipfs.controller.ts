@@ -14,7 +14,7 @@ export class IpfsGatewayController {
     private readonly jwtService: JwtService,
   ) {}
 
-  @Post('upload')
+  @Post('add')
   @UseGuards(AuthTokenGuard)
   async upload(@Body() dto: UploadDataToIpfsDto) {
     try {
