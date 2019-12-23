@@ -20,7 +20,6 @@ import { JwtService } from 'src/services/jwt.service';
 import { AuthTokenGuard } from 'src/guards/authtoken.guard';
 import { HashcashGuard } from 'src/guards/hashcash.guard';
 
-// TODO migrate to jwt based authentication
 @Controller('identity')
 export class IdentityController {
   constructor(

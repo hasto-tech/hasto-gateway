@@ -25,4 +25,56 @@ export class IdentitiesService {
   async getByPhoneNumber(phoneNumber: string): Promise<IdentityInterface> {
     return await this.identityModel.findOne({ phoneNumber });
   }
+
+  async getByAddress(ethereumAddress: string): Promise<IdentityInterface> {
+    return await this.identityModel.findOne({ ethereumAddress });
+  }
+
+  async increaseUsedTransfer(whom: string, by: number) {
+    const identity = await this.getByAddress(whom);
+    await this.identityModel.findByIdAndUpdate(
+      { ethereumAddress: whom },
+      {
+        $set: {
+          usedTransfer: identity.usedTransfer + by,
+        },
+      },
+    );
+  }
+
+  async decreaseUsedTransfer(whom: string, by: number) {
+    const identity = await this.getByAddress(whom);
+    await this.identityModel.findByIdAndUpdate(
+      { ethereumAddress: whom },
+      {
+        $set: {
+          usedTransfer: identity.usedTransfer - by,
+        },
+      },
+    );
+  }
+
+  async decreaseAvailableTransfer(whom: string, by: number) {
+    const identity = await this.getByAddress(whom);
+    await this.identityModel.findByIdAndUpdate(
+      { ethereumAddress: whom },
+      {
+        $set: {
+          availableTransfer: identity.availableTransfer - by,
+        },
+      },
+    );
+  }
+
+  async increaseAvailableTransfer(whom: string, by: number) {
+    const identity = await this.getByAddress(whom);
+    await this.identityModel.findByIdAndUpdate(
+      { ethereumAddress: whom },
+      {
+        $set: {
+          availableTransfer: identity.availableTransfer + by,
+        },
+      },
+    );
+  }
 }
