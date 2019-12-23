@@ -14,8 +14,9 @@ import EthCrypto from 'eth-crypto';
 import { utils } from 'ethers';
 import { randomBytes } from 'crypto';
 import { JwtService } from 'src/services/jwt.service';
-import { AuthTokenGuard } from 'src/guards/authtoken.guard';
 import { HashcashGuard } from 'src/guards/hashcash.guard';
+
+import { SHA256, enc } from 'crypto-js';
 
 @Controller('auth')
 export class AuthenticationController {
@@ -24,7 +25,7 @@ export class AuthenticationController {
     private readonly jwtService: JwtService,
   ) {}
 
-  @Get('request-challange/:ethereumAddress')
+  @Get('request-challenge/:ethereumAddress')
   @UseGuards(HashcashGuard)
   async getAuthenticationChallange(
     @Param('ethereumAddress') ethereumAddress: string,
@@ -35,7 +36,8 @@ export class AuthenticationController {
       return { error: true, message: 'invalid ethereum address' };
     }
 
-    const randomness = randomBytes(7).toString('hex');
+    const randomness =
+      '0x' + SHA256(randomBytes(7).toString('hex')).toString(enc.Hex);
 
     await this.redisService.setValue(
       `${ethereumAddress}-challenge`,
@@ -47,11 +49,11 @@ export class AuthenticationController {
   }
 
   @Post('face-challenge')
-  @UseGuards(AuthTokenGuard)
   async faceAuthenticationChallenge(
     @Headers('signature') signature: string,
     @Body() faceAuthenticationChallangeDto: { ethereumAddress: string },
   ) {
+    // Check if signature is correct
     const randomness = await this.redisService.getValue(
       `${faceAuthenticationChallangeDto.ethereumAddress}-challenge`,
     );
@@ -81,14 +83,11 @@ export class AuthenticationController {
       };
     }
 
-    const session = randomBytes(7).toString('hex');
+    // Create an authentication token
+    const authToken = await this.jwtService.generateToken(60 * 60, {
+      ethereumAddress: faceAuthenticationChallangeDto.ethereumAddress,
+    });
 
-    await this.redisService.setValue(
-      `session-${session}`,
-      faceAuthenticationChallangeDto.ethereumAddress,
-      1000 * 60 * 30,
-    );
-
-    return { error: false, session };
+    return { error: false, authToken };
   }
 }

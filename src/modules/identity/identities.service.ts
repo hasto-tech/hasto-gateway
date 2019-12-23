@@ -17,4 +17,12 @@ export class IdentitiesService {
       throw err;
     }
   }
+
+  async getByEmail(email: string): Promise<IdentityInterface> {
+    return await this.identityModel.findOne({ email });
+  }
+
+  async getByPhoneNumber(phoneNumber: string): Promise<IdentityInterface> {
+    return await this.identityModel.findOne({ phoneNumber });
+  }
 }

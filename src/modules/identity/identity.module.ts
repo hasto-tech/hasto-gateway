@@ -7,12 +7,15 @@ import { MessagingService } from 'src/services/messaging.service';
 import { MongoModule } from 'src/singletons/mongo/mongo.module';
 import { IdentitiesService } from './identities.service';
 import { identitiesProviders } from './identities.providers';
+import { JwtService } from 'src/services/jwt.service';
+import { JwtModule } from 'src/singletons/jwt/jwt.module';
 
 @Module({
-  imports: [RedisModule, MessegerModule, MongoModule],
+  imports: [RedisModule, MessegerModule, JwtModule, MongoModule],
   providers: [
     RedisService,
     MessagingService,
+    JwtService,
     IdentitiesService,
     ...identitiesProviders,
   ],

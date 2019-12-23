@@ -10,19 +10,16 @@ export class JwtService {
     private readonly secret: string,
   ) {}
 
-  async generateToken(expiresIn: number, body: any): Promise<string> {
+  generateToken(expiresIn: number, body: any): string {
     return jwt.sign(body, this.secret, { expiresIn });
   }
 
-  async decodeToken(
-    token: string,
-  ): Promise<{ headers: any; body: any; signature: string }> {
+  decodeToken(token: string): any {
     const decoded = jwt.decode(token);
-    // TODO
-    return { headers: {}, body: {}, signature: '' };
+    return decoded;
   }
 
-  async verify(token: string): Promise<boolean> {
+  verify(token: string): boolean {
     // TODO
     return jwt.verify(token, this.secret) === jwt.decode(token);
   }

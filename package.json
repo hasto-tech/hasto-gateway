@@ -46,7 +46,7 @@
     "twilio": "^3.39.0"
   },
   "devDependencies": {
-    "@nestjs/testing": "^6.0.0",
+    "@nestjs/testing": "^6.10.12",
     "@types/express": "^4.16.0",
     "@types/jest": "^23.3.13",
     "@types/node": "^10.12.18",

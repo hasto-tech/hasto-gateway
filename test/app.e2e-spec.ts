@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
 
 import EthCrypto from 'eth-crypto';
+import { AuthenticationModule } from 'src/modules/authentication/authentication.module';
 
-describe('AppController (e2e)', () => {
+describe('AuthController (e2e)', () => {
   let app;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AuthenticationModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
