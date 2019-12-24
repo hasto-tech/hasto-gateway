@@ -122,7 +122,6 @@ export class IdentityController {
     }
 
     // Save identity
-    // FIXME
     try {
       await this.identitiesService.create(identity);
       return { error: false };

@@ -26,6 +26,8 @@ services:
       - '27017:27017'
     networks:
       - hasto
+    volumes:
+      - './data:/data/db'
   ipfs_host:
     image: ipfs/go-ipfs
     ports:

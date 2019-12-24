@@ -12,7 +12,7 @@ export class IdentitiesService {
 
   async create(identity: IdentityRawInterface): Promise<IdentityInterface> {
     try {
-      return await new this.identityModel(identity);
+      return await new this.identityModel(identity).save();
     } catch (err) {
       throw err;
     }
