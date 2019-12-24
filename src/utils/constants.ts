@@ -3,5 +3,6 @@ export const IPFS_PROVIDER = 'IPFS_MANAGER';
 export const MESSAGER_PROVIDER = 'MESSAGING_MANAGER';
 export const MONGO_PROVIDER = 'MONGO_MANAGER';
 export const JWT_PROVIDER = 'JWT_MANAGER';
+export const CONFIG_PROVIDER = 'CONFIG_MANAGER';
 
 export const IDENTITY_SCHEMA_TOKEN = 'IdentitySchemaToken';

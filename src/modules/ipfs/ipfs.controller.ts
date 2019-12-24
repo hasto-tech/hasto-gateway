@@ -10,9 +10,10 @@ import {
 import { IpfsService } from 'src/services/ipfs.service';
 import { UploadDataToIpfsDto, RemoveDataFromIpfsDto } from './ipfs.dtos';
 import { JwtService } from 'src/services/jwt.service';
-import { AuthTokenGuard } from 'src/guards/authtoken.guard';
+import { IsTokenValidGuard } from 'src/guards/token.valid.guard';
 import { IdentitiesService } from '../identity/identities.service';
 import { IdentitySetGuard } from 'src/guards/idenitity.set.guard';
+import { IsUserGuard } from 'src/guards/is.user.guard';
 
 @Controller('ipfs')
 export class IpfsGatewayController {
@@ -23,7 +24,8 @@ export class IpfsGatewayController {
   ) {}
 
   @Post('add')
-  @UseGuards(AuthTokenGuard)
+  @UseGuards(IsTokenValidGuard)
+  @UseGuards(IsUserGuard)
   @UseGuards(IdentitySetGuard)
   async upload(
     @Headers('authtoken') authtoken: string,
@@ -46,7 +48,8 @@ export class IpfsGatewayController {
   }
 
   @Post('remove')
-  @UseGuards(AuthTokenGuard)
+  @UseGuards(IsTokenValidGuard)
+  @UseGuards(IsUserGuard)
   async remove(
     @Headers('authtoken') authtoken: string,
     @Body() dto: RemoveDataFromIpfsDto,

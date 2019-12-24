@@ -1,11 +1,10 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { JwtService } from 'src/services/jwt.service';
-import { AuthTokenExpiredException } from 'src/exceptions/authtoken.expired.exception';
-import { InvalidAuthTokenException } from 'src/exceptions/invalid.authtoken.exception';
+import { InvalidUserAuthTokenException } from 'src/exceptions/invalid.user.authtoken.exception';
 
 @Injectable()
-export class AuthTokenGuard implements CanActivate {
+export class IsUserGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
   canActivate(
     context: ExecutionContext,
@@ -13,17 +12,14 @@ export class AuthTokenGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const authToken: string = request.headers.authtoken;
     const decoded = this.jwtService.decodeToken(authToken);
+
     if (!decoded.ethereumAddress) {
-      throw new InvalidAuthTokenException();
+      throw new InvalidUserAuthTokenException();
     }
-    const tokenExpirationTime: number = decoded.exp;
-    if (Date.now() / 1000 > tokenExpirationTime) {
-      throw new AuthTokenExpiredException();
+    if (decoded.role !== 'user') {
+      throw new InvalidUserAuthTokenException();
     }
-    const isValid = this.jwtService.verify(authToken);
-    if (!isValid) {
-      throw new InvalidAuthTokenException();
-    }
+
     return true;
   }
 }

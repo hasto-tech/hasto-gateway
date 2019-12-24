@@ -17,9 +17,10 @@ import { MessagingService } from 'src/services/messaging.service';
 import { IdentityRawInterface } from './identity.interface';
 import { IdentitiesService } from './identities.service';
 import { JwtService } from 'src/services/jwt.service';
-import { AuthTokenGuard } from 'src/guards/authtoken.guard';
+import { IsTokenValidGuard } from 'src/guards/token.valid.guard';
 import { HashcashGuard } from 'src/guards/hashcash.guard';
 import { HashcashService } from 'src/services/hashcash.service';
+import { IsUserGuard } from 'src/guards/is.user.guard';
 
 @Controller('identity')
 export class IdentityController {
@@ -31,7 +32,8 @@ export class IdentityController {
   ) {}
 
   @Post('set')
-  @UseGuards(AuthTokenGuard)
+  @UseGuards(IsTokenValidGuard)
+  @UseGuards(IsUserGuard)
   async setCachedIdentity(
     @Headers('authtoken') authtoken: string,
     @Body() dto: SetIdentityDto,
@@ -90,7 +92,8 @@ export class IdentityController {
   }
 
   @Post('confirm')
-  @UseGuards(AuthTokenGuard)
+  @UseGuards(IsTokenValidGuard)
+  @UseGuards(IsUserGuard)
   async confirmCachedIdenity(
     @Headers('authtoken') authtoken: string,
     @Body() dto: ConfirmIdentityDto,
