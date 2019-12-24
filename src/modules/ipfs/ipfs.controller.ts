@@ -12,6 +12,7 @@ import { UploadDataToIpfsDto, RemoveDataFromIpfsDto } from './ipfs.dtos';
 import { JwtService } from 'src/services/jwt.service';
 import { AuthTokenGuard } from 'src/guards/authtoken.guard';
 import { IdentitiesService } from '../identity/identities.service';
+import { IdentitySetGuard } from 'src/guards/idenitity.set.guard';
 
 @Controller('ipfs')
 export class IpfsGatewayController {
@@ -23,6 +24,7 @@ export class IpfsGatewayController {
 
   @Post('add')
   @UseGuards(AuthTokenGuard)
+  @UseGuards(IdentitySetGuard)
   async upload(
     @Headers('authtoken') authtoken: string,
     @Body() dto: UploadDataToIpfsDto,

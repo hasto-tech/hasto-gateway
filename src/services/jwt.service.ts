@@ -20,7 +20,11 @@ export class JwtService {
   }
 
   verify(token: string): boolean {
-    // TODO
-    return jwt.verify(token, this.secret) === jwt.decode(token);
+    try {
+      jwt.verify(token, this.secret);
+    } catch (err) {
+      return false;
+    }
+    return true;
   }
 }
