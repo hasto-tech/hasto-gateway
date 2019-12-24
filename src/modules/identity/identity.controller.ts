@@ -126,7 +126,7 @@ export class IdentityController {
       await this.identitiesService.create(identity);
       return { error: false };
     } catch (err) {
-      return { error: false, message: err.message };
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
     }
   }
 
