@@ -12,6 +12,7 @@ export class MessagingService {
       mailTransporter: Mail;
       twilioClient: Twilio;
       twilioDetails: { phoneNumbers: string[] };
+      mailUser: string;
     },
   ) {}
 
@@ -20,6 +21,7 @@ export class MessagingService {
       to,
       subject,
       text,
+      from: this.messenger.mailUser,
     };
     try {
       await this.messenger.mailTransporter.sendMail(mail);

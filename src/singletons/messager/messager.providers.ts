@@ -39,6 +39,7 @@ export const messagerProviders = [
           },
         }),
         twilioDetails: { phoneNumbers: [config.twilioPhoneNumber] },
+        mailUser: config.mailUser,
       };
     },
   },

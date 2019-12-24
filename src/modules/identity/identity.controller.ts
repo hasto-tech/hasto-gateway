@@ -19,6 +19,7 @@ import { IdentitiesService } from './identities.service';
 import { JwtService } from 'src/services/jwt.service';
 import { AuthTokenGuard } from 'src/guards/authtoken.guard';
 import { HashcashGuard } from 'src/guards/hashcash.guard';
+import { HashcashService } from 'src/services/hashcash.service';
 
 @Controller('identity')
 export class IdentityController {
@@ -159,5 +160,20 @@ export class IdentityController {
     }
 
     return { error: false, ethereumAddress };
+  }
+
+  @Get('identity-exists/:ethereumAddress')
+  @UseGuards(HashcashService)
+  async doesIdentityExistFor(
+    @Param('ethereumAddress') ethereumAddress: string,
+  ) {
+    const identity = await this.identitiesService.getByAddress(ethereumAddress);
+    let exists: boolean = false;
+
+    if (identity) {
+      exists = true;
+    }
+
+    return { error: false, exists };
   }
 }
