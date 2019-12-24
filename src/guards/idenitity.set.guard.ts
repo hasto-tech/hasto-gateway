@@ -16,7 +16,6 @@ export class IdentitySetGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const authToken: string = request.headers.authtoken;
     const address = this.jwtService.decodeToken(authToken).ethereumAddress;
-
     let exists: boolean = false;
 
     this.identitiesService.getByAddress(address).then(identity => {
