@@ -22,6 +22,7 @@ import { SHA256, enc } from 'crypto-js';
 import { ConfigService } from 'src/services/config.service';
 
 import { includes } from 'lodash';
+import { ADMIN_ROLE_TOKEN, USER_ROLE_TOKEN } from 'src/utils/constants';
 
 @Controller('auth')
 export class AuthenticationController {
@@ -93,7 +94,7 @@ export class AuthenticationController {
     // Create an authentication token
     const authToken = await this.jwtService.generateToken(60 * 60, {
       ethereumAddress: faceAuthenticationChallangeDto.ethereumAddress,
-      role: 'user',
+      role: USER_ROLE_TOKEN,
     });
 
     return { error: false, authToken };
@@ -179,7 +180,7 @@ export class AuthenticationController {
     // Create an authentication token
     const authToken = await this.jwtService.generateToken(60 * 60, {
       ethereumAddress: faceAuthenticationChallangeDto.ethereumAddress,
-      role: 'admin',
+      role: ADMIN_ROLE_TOKEN,
     });
 
     return { error: false, authToken };

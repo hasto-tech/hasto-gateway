@@ -2,6 +2,7 @@ import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { JwtService } from 'src/services/jwt.service';
 import { InvalidUserAuthTokenException } from 'src/exceptions/invalid.user.authtoken.exception';
+import { USER_ROLE_TOKEN } from 'src/utils/constants';
 
 @Injectable()
 export class IsUserGuard implements CanActivate {
@@ -16,7 +17,7 @@ export class IsUserGuard implements CanActivate {
     if (!decoded.ethereumAddress) {
       throw new InvalidUserAuthTokenException();
     }
-    if (decoded.role !== 'user') {
+    if (decoded.role !== USER_ROLE_TOKEN) {
       throw new InvalidUserAuthTokenException();
     }
 
