@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { JwtService } from 'src/services/jwt.service';
 
 import { InvalidAdminAuthTokenException } from '../exceptions/invalid.admin.authtoken.exception';
+import { ADMIN_ROLE_TOKEN } from 'src/utils/constants';
 
 @Injectable()
 export class IsAdminGuard implements CanActivate {
@@ -17,7 +18,7 @@ export class IsAdminGuard implements CanActivate {
     if (!decoded.adminAddress) {
       throw new InvalidAdminAuthTokenException();
     }
-    if (decoded.role !== 'admin') {
+    if (decoded.role !== ADMIN_ROLE_TOKEN) {
       throw new InvalidAdminAuthTokenException();
     }
 
