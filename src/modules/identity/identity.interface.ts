@@ -1,8 +1,14 @@
 import { Document } from 'mongoose';
 
 export interface IdentityRawInterface {
-  // user's beyond relayer master address
-  readonly ethereumAddress: string;
+  // Users master keypait public key
+  readonly publicKey: string;
+
+  /**
+   * @property onContractIdentityAddress - user's real address in case of non relayed intercation, proxy address when relayed
+   */
+  readonly onContractIdentityAddress: string;
+
   // array of pinned ipfs hashes
   readonly pins?: string[];
   // array of unpinned ipfs hashes

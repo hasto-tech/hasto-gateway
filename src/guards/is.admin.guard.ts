@@ -15,7 +15,7 @@ export class IsAdminGuard implements CanActivate {
     const authToken: string = request.headers.authtoken;
     const decoded = this.jwtService.decodeToken(authToken);
 
-    if (!decoded.adminAddress) {
+    if (!decoded.publicKey) {
       throw new InvalidAdminAuthTokenException();
     }
     if (decoded.role !== ADMIN_ROLE_TOKEN) {

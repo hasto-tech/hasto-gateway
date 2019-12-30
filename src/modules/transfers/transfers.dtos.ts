@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsNumber } from 'class-validator';
-import { IsEthereumAddress } from 'src/utils/custom-validators';
+import { IsSecp256k1PubKey } from 'src/utils/custom-dtos-validators';
 
 export class AssignTransferDto {
   @IsNotEmpty()
-  @IsEthereumAddress()
+  @IsSecp256k1PubKey()
   readonly whom: string;
 
   @IsNotEmpty()
@@ -13,7 +13,7 @@ export class AssignTransferDto {
 
 export class RemoveTransferDto {
   @IsNotEmpty()
-  @IsEthereumAddress()
+  @IsSecp256k1PubKey()
   readonly whom: string;
 
   @IsNotEmpty()

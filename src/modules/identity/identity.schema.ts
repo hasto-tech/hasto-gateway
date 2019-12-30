@@ -1,7 +1,13 @@
 import { Schema } from 'mongoose';
 
 export const IdentitySchema = new Schema({
-  ethereumAddress: {
+  publicKey: {
+    type: String,
+    required: true,
+    index: true,
+    unique: false,
+  },
+  onContractIdentityAddress: {
     type: String,
     required: true,
     index: true,

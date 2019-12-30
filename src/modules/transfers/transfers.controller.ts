@@ -3,7 +3,6 @@ import {
   Post,
   Get,
   UseGuards,
-  Headers,
   Body,
   HttpException,
   HttpStatus,
@@ -14,6 +13,8 @@ import { IsAdminGuard } from 'src/guards/is.admin.guard';
 import { IsTokenValidGuard } from 'src/guards/token.valid.guard';
 import { AssignTransferDto, RemoveTransferDto } from './transfers.dtos';
 import { UserNotExistsException } from 'src/exceptions/user.not.exists.exception';
+import { IdentityRawInterface } from '../identity/identity.interface';
+import { utils } from 'ethers';
 
 @Controller('transfers')
 export class TransfersControlller {
@@ -26,9 +27,14 @@ export class TransfersControlller {
   @UseGuards(IsTokenValidGuard)
   @UseGuards(IsAdminGuard)
   async assignTransfer(@Body() dto: AssignTransferDto) {
-    const identity = await this.identitiesService.getByAddress(dto.whom);
+    const identity = await this.identitiesService.getByPublicKey(dto.whom);
+
     if (!identity) {
-      throw new UserNotExistsException();
+      const newAnonymousIdentity: IdentityRawInterface = {
+        publicKey: dto.whom,
+        onContractIdentityAddress: utils.computeAddress('0x' + dto.whom),
+      };
+      await this.identitiesService.create(newAnonymousIdentity);
     }
 
     await this.identitiesService.increaseAvailableTransfer(
@@ -42,7 +48,7 @@ export class TransfersControlller {
   @UseGuards(IsTokenValidGuard)
   @UseGuards(IsAdminGuard)
   async removeTransfer(@Body() dto: RemoveTransferDto) {
-    const identity = await this.identitiesService.getByAddress(dto.whom);
+    const identity = await this.identitiesService.getByPublicKey(dto.whom);
     if (!identity) {
       throw new UserNotExistsException();
     }
@@ -62,9 +68,11 @@ export class TransfersControlller {
     return { error: false };
   }
 
+  // TODO
   @Get('summary-user')
   async getTransferSummaryAsUser() {}
 
+  // TODO
   @Get('summary-admin/:ethereumAddress')
   async getTransferSummaryAsAdmin() {}
 }

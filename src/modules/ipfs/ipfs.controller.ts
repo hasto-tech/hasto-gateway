@@ -31,10 +31,10 @@ export class IpfsGatewayController {
     @Headers('authtoken') authtoken: string,
     @Body() dto: UploadDataToIpfsDto,
   ) {
-    const address = this.jwtService.decodeToken(authtoken).ethereumAddress;
+    const publicKey = this.jwtService.decodeToken(authtoken).publicKey;
     const byteSize = Buffer.byteLength(dto.rawData, 'utf8');
     const gbByteSize = byteSize / Math.pow(1024, 3);
-    const identity = await this.identitiesService.getByAddress(address);
+    const identity = await this.identitiesService.getByPublicKey(publicKey);
     const availableTransfer = identity.availableTransfer;
 
     if (availableTransfer < gbByteSize) {
@@ -42,8 +42,11 @@ export class IpfsGatewayController {
     }
 
     const ipfsHash = await this.ipfsService.addAndPinData(dto.rawData);
-    await this.identitiesService.increaseUsedTransfer(address, gbByteSize);
-    await this.identitiesService.decreaseAvailableTransfer(address, gbByteSize);
+    await this.identitiesService.increaseUsedTransfer(publicKey, gbByteSize);
+    await this.identitiesService.decreaseAvailableTransfer(
+      publicKey,
+      gbByteSize,
+    );
     return { error: false, ipfsHash, usedTransfer: gbByteSize };
   }
 
@@ -55,7 +58,7 @@ export class IpfsGatewayController {
     @Body() dto: RemoveDataFromIpfsDto,
   ) {
     // TODO monitoring
-    const address = this.jwtService.decodeToken(authtoken).ethereumAddress;
+    const publicKey = this.jwtService.decodeToken(authtoken).publicKey;
     await this.ipfsService.unpin(dto.ipfsHash);
     return { error: false };
   }

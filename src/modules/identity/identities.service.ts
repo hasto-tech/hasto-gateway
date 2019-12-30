@@ -26,12 +26,31 @@ export class IdentitiesService {
     return await this.identityModel.findOne({ phoneNumber });
   }
 
-  async getByAddress(ethereumAddress: string): Promise<IdentityInterface> {
-    return await this.identityModel.findOne({ ethereumAddress });
+  /**
+   *
+   * @param publicKey - users's master keypair public key, master keypair is the one used during the final decryption beyond the proxy
+   */
+  async getByPublicKey(publicKey: string): Promise<IdentityInterface> {
+    return await this.identityModel.findOne({ publicKey });
   }
 
+  /**
+   *
+   * @param onContractIdentityAddress - user's real or proxy address if calls are relayed, in brief user's identity address
+   */
+  async getByOnContractIdentityAddress(
+    onContractIdentityAddress: string,
+  ): Promise<IdentityInterface> {
+    return await this.identityModel.findOne({ onContractIdentityAddress });
+  }
+
+  /**
+   *
+   * @param whom - user defined by it's public key
+   * @param by - how much to be increased
+   */
   async increaseUsedTransfer(whom: string, by: number) {
-    const identity = await this.getByAddress(whom);
+    const identity = await this.getByPublicKey(whom);
     await this.identityModel.findByIdAndUpdate(
       { ethereumAddress: whom },
       {
@@ -42,8 +61,13 @@ export class IdentitiesService {
     );
   }
 
+  /**
+   *
+   * @param whom - user defined by it's public key
+   * @param by - how much to be increased
+   */
   async decreaseUsedTransfer(whom: string, by: number) {
-    const identity = await this.getByAddress(whom);
+    const identity = await this.getByPublicKey(whom);
     await this.identityModel.findByIdAndUpdate(
       { ethereumAddress: whom },
       {
@@ -54,8 +78,13 @@ export class IdentitiesService {
     );
   }
 
+  /**
+   *
+   * @param whom - user defined by it's public key
+   * @param by - how much to be increased
+   */
   async decreaseAvailableTransfer(whom: string, by: number) {
-    const identity = await this.getByAddress(whom);
+    const identity = await this.getByPublicKey(whom);
     await this.identityModel.findByIdAndUpdate(
       { ethereumAddress: whom },
       {
@@ -66,8 +95,13 @@ export class IdentitiesService {
     );
   }
 
+  /**
+   *
+   * @param whom - user defined by it's public key
+   * @param by - how much to be increased
+   */
   async increaseAvailableTransfer(whom: string, by: number) {
-    const identity = await this.getByAddress(whom);
+    const identity = await this.getByPublicKey(whom);
     await this.identityModel.findByIdAndUpdate(
       { ethereumAddress: whom },
       {

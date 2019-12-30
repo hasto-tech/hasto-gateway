@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Param,
   Headers,
   Body,
   UseGuards,
@@ -23,6 +22,7 @@ import { ConfigService } from 'src/services/config.service';
 
 import { includes } from 'lodash';
 import { ADMIN_ROLE_TOKEN, USER_ROLE_TOKEN } from 'src/utils/constants';
+import { IsValidPublicKeyGuard } from 'src/guards/is.valid.publickey.guard';
 
 @Controller('auth')
 export class AuthenticationController {
@@ -32,25 +32,21 @@ export class AuthenticationController {
     private readonly configService: ConfigService,
   ) {}
 
-  @Get('user/request-challenge/:ethereumAddress')
+  @Get('request-challenge')
   @UseGuards(HashcashGuard)
+  @UseGuards(IsValidPublicKeyGuard)
   async getUserAuthenticationChallenge(
-    @Param('ethereumAddress') ethereumAddress: string,
+    @Headers('publickey') publicKey: string,
   ) {
-    const isValidAddress = utils.isHexString(ethereumAddress);
-
-    if (!isValidAddress) {
-      throw new HttpException(
-        'Invalid ethereum address',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
+    // generate payload to sign
     const randomness =
       '0x' + SHA256(randomBytes(7).toString('hex')).toString(enc.Hex);
 
+    // set role
+    const role = await this.getRole(publicKey);
+
     await this.redisService.setValue(
-      `user-${ethereumAddress}-challenge`,
+      `${role}-${publicKey}-challenge`,
       randomness,
       5000,
     );
@@ -58,26 +54,30 @@ export class AuthenticationController {
     return { error: false, randomness };
   }
 
-  @Post('user/face-challenge')
+  @Post('face-challenge')
   async faceUserAuthenticationChallenge(
     @Headers('signature') signature: string,
-    @Body() faceAuthenticationChallangeDto: { ethereumAddress: string },
+    @Body() dto: { publicKey: string },
   ) {
+    // set role
+    const role = await this.getRole(dto.publicKey);
+
     // Check if signature is correct
     const randomness = await this.redisService.getValue(
-      `user-${faceAuthenticationChallangeDto.ethereumAddress}-challenge`,
+      `${role}-${dto.publicKey}-challenge`,
     );
 
     if (!randomness) {
-      const message = `challenge for ${faceAuthenticationChallangeDto.ethereumAddress} expired or not found`;
+      const message = `challenge for ${dto.publicKey} expired or not found`;
       throw new HttpException(message, HttpStatus.BAD_REQUEST);
     }
 
     try {
-      const recoveredSigner = EthCrypto.recover(signature, randomness);
-      const isSignatureValid =
-        recoveredSigner === faceAuthenticationChallangeDto.ethereumAddress;
-
+      const isSignatureValid = await this.isSignatureValid(
+        dto.publicKey,
+        randomness,
+        signature,
+      );
       if (!isSignatureValid) {
         throw new HttpException(
           `Invalid signature`,
@@ -93,96 +93,40 @@ export class AuthenticationController {
 
     // Create an authentication token
     const authToken = await this.jwtService.generateToken(60 * 60, {
-      ethereumAddress: faceAuthenticationChallangeDto.ethereumAddress,
-      role: USER_ROLE_TOKEN,
+      publicKey: dto.publicKey,
+      role,
     });
 
     return { error: false, authToken };
   }
 
-  @Get('admin/request-challenge/:ethereumAddress')
-  @UseGuards(HashcashGuard)
-  async getAdminAuthenticationChallenge(
-    @Param('ethereumAddress') ethereumAddress: string,
-  ) {
-    const isValidAddress = utils.isHexString(ethereumAddress);
+  private async getRole(publicKey: string): Promise<'user' | 'admin'> {
+    let role: 'admin' | 'user' = USER_ROLE_TOKEN;
 
-    if (!isValidAddress) {
-      throw new HttpException(
-        'Invalid ethereum address',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    const isValidAdminAddress = includes(
+    const ethAddress = utils.computeAddress(`0x${publicKey}`);
+
+    const isAdmin = includes(
       this.configService.config.adminAddresses,
-      ethereumAddress,
+      ethAddress,
     );
 
-    if (!isValidAdminAddress) {
-      throw new HttpException('Invalid admin address', HttpStatus.FORBIDDEN);
+    if (isAdmin) {
+      role = ADMIN_ROLE_TOKEN;
     }
 
-    const randomness =
-      '0x' + SHA256(randomBytes(7).toString('hex')).toString(enc.Hex);
-
-    await this.redisService.setValue(
-      `admin-${ethereumAddress}-challenge`,
-      randomness,
-      5000,
-    );
-
-    return { error: false, randomness };
+    return role;
   }
 
-  @Post('admin/face-challenge')
-  async faceAdminAuthenticationChallenge(
-    @Headers('signature') signature: string,
-    @Body() faceAuthenticationChallangeDto: { ethereumAddress: string },
-  ) {
-    // Validate caller
-    const isValidAdminAddress = includes(
-      this.configService.config.adminAddresses,
-      faceAuthenticationChallangeDto.ethereumAddress,
-    );
-
-    if (!isValidAdminAddress) {
-      throw new HttpException('Invalid admin address', HttpStatus.FORBIDDEN);
-    }
-
-    // Check if signature is correct
-    const randomness = await this.redisService.getValue(
-      `admin-${faceAuthenticationChallangeDto.ethereumAddress}-challenge`,
-    );
-
-    if (!randomness) {
-      const message = `challenge for ${faceAuthenticationChallangeDto.ethereumAddress} expired or not found`;
-      throw new HttpException(message, HttpStatus.BAD_REQUEST);
-    }
-
+  private async isSignatureValid(
+    signer: string,
+    digest: string,
+    signature: string,
+  ): Promise<boolean> {
     try {
-      const recoveredSigner = EthCrypto.recover(signature, randomness);
-      const isSignatureValid =
-        recoveredSigner === faceAuthenticationChallangeDto.ethereumAddress;
-
-      if (!isSignatureValid) {
-        throw new HttpException(
-          `Invalid signature`,
-          HttpStatus.EXPECTATION_FAILED,
-        );
-      }
+      const recoveredSigner = EthCrypto.recover(signature, digest);
+      return recoveredSigner === utils.computeAddress(`0x${signer}`);
     } catch (err) {
-      throw new HttpException(
-        `error while recovering the signature: ${err.message}`,
-        HttpStatus.BAD_REQUEST,
-      );
+      throw err;
     }
-
-    // Create an authentication token
-    const authToken = await this.jwtService.generateToken(60 * 60, {
-      ethereumAddress: faceAuthenticationChallangeDto.ethereumAddress,
-      role: ADMIN_ROLE_TOKEN,
-    });
-
-    return { error: false, authToken };
   }
 }

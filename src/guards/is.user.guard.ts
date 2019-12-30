@@ -14,7 +14,7 @@ export class IsUserGuard implements CanActivate {
     const authToken: string = request.headers.authtoken;
     const decoded = this.jwtService.decodeToken(authToken);
 
-    if (!decoded.ethereumAddress) {
+    if (!decoded.publicKey) {
       throw new InvalidUserAuthTokenException();
     }
     if (decoded.role !== USER_ROLE_TOKEN) {

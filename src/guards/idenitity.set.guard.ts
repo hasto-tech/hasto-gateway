@@ -15,13 +15,15 @@ export class IdentitySetGuard implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
     const authToken: string = request.headers.authtoken;
-    const address = this.jwtService.decodeToken(authToken).ethereumAddress;
+    const decoded = this.jwtService.decodeToken(authToken);
 
-    return this.identitiesService.getByAddress(address).then(identity => {
-      if (identity) {
-        return true;
-      }
-      return false;
-    });
+    return this.identitiesService
+      .getByPublicKey(decoded.publicKey)
+      .then(identity => {
+        if (identity) {
+          return true;
+        }
+        return false;
+      });
   }
 }

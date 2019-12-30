@@ -21,6 +21,7 @@ import { IsTokenValidGuard } from 'src/guards/token.valid.guard';
 import { HashcashGuard } from 'src/guards/hashcash.guard';
 import { HashcashService } from 'src/services/hashcash.service';
 import { IsUserGuard } from 'src/guards/is.user.guard';
+import { utils } from 'ethers';
 
 @Controller('identity')
 export class IdentityController {
@@ -39,8 +40,7 @@ export class IdentityController {
     @Body() dto: SetIdentityDto,
   ) {
     // Recognize user
-    const ethereumAddress = this.jwtService.decodeToken(authtoken)
-      .ethereumAddress;
+    const publicKey = this.jwtService.decodeToken(authtoken).publicKey;
 
     // Validate payload
     if (!dto.email && !dto.phoneNumber) {
@@ -64,7 +64,7 @@ export class IdentityController {
       .toUpperCase();
 
     // Cache declared identity
-    const cacheKey = `identity-cache.${ethereumAddress}.${confirmationCode}`;
+    const cacheKey = `identity-cache.${publicKey}.${confirmationCode}`;
 
     // Send the confirmation code
     if (dto.email) {
@@ -99,11 +99,10 @@ export class IdentityController {
     @Body() dto: ConfirmIdentityDto,
   ) {
     // Recognize user
-    const ethereumAddress = this.jwtService.decodeToken(authtoken)
-      .ethereumAddress;
+    const publicKey = this.jwtService.decodeToken(authtoken).publicKey;
 
     // Get it's identity
-    const cacheKey = `identity-cache.${ethereumAddress}.${dto.confirmationCode}`;
+    const cacheKey = `identity-cache.${publicKey}.${dto.confirmationCode}`;
 
     const cachedIdentitySetup = await this.redisService.getValue(cacheKey);
 
@@ -114,7 +113,11 @@ export class IdentityController {
     const identityInfo = JSON.parse(cachedIdentitySetup);
 
     // Set identity type
-    let identity: IdentityRawInterface = { ethereumAddress };
+    const address = utils.computeAddress('0x' + publicKey);
+    let identity: IdentityRawInterface = {
+      publicKey,
+      onContractIdentityAddress: address,
+    };
 
     if (identityInfo.type === 'email') {
       identity.email = identityInfo.value;
@@ -137,15 +140,15 @@ export class IdentityController {
   @UseGuards(HashcashGuard)
   async getIdentityEthereumAddressByEmail(@Param('email') email: string) {
     const identity = await this.identitiesService.getByEmail(email);
-    const ethereumAddress = identity.ethereumAddress;
-    if (!ethereumAddress) {
+    const proxyAddress = identity.onContractIdentityAddress;
+    if (!proxyAddress) {
       throw new HttpException(
-        'User with the given email does not exist',
+        "User with the given email does not exist or it's proxy identity is still not set, if so retry later",
         HttpStatus.NOT_FOUND,
       );
     }
 
-    return { error: false, ethereumAddress };
+    return { error: false, proxyAddress };
   }
 
   @Get('by-phone-number/:phoneNumber')
@@ -154,23 +157,23 @@ export class IdentityController {
     @Param('phoneNumber') phoneNumber: string,
   ) {
     const identity = await this.identitiesService.getByPhoneNumber(phoneNumber);
-    const ethereumAddress = identity.ethereumAddress;
-    if (!ethereumAddress) {
+    const proxyAddress = identity.onContractIdentityAddress;
+    if (!proxyAddress) {
       throw new HttpException(
-        'User with the given phone number does not exist',
+        "User with the given email does not exist or it's proxy identity is still not set, if so retry later",
         HttpStatus.NOT_FOUND,
       );
     }
 
-    return { error: false, ethereumAddress };
+    return { error: false, proxyAddress };
   }
 
-  @Get('identity-exists/:ethereumAddress')
+  @Get('identity-exists/:address')
   @UseGuards(HashcashService)
-  async doesIdentityExistFor(
-    @Param('ethereumAddress') ethereumAddress: string,
-  ) {
-    const identity = await this.identitiesService.getByAddress(ethereumAddress);
+  async doesIdentityExistFor(@Param('address') identityAddress: string) {
+    const identity = await this.identitiesService.getByOnContractIdentityAddress(
+      identityAddress,
+    );
     let exists: boolean = false;
 
     if (identity) {
