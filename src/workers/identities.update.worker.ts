@@ -6,7 +6,5 @@ export class OnContractIdentitiesUpdateWorker extends Worker {
     super(frequency);
   }
 
-  async job() {
-    return;
-  }
+  async job() {}
 }

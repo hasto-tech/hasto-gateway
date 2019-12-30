@@ -28,7 +28,7 @@ export function IsEthereumAddress(validationOptions?: ValidationOptions) {
 export function IsSecp256k1PubKey(validationOptions?: ValidationOptions) {
   return (object: any, propertyName: string) => {
     registerDecorator({
-      name: 'IsEthereumAddress',
+      name: 'IsSecp256k1PubKey',
       target: object.constructor,
       propertyName,
       constraints: [],

@@ -37,6 +37,8 @@ export class IpfsGatewayController {
     const identity = await this.identitiesService.getByPublicKey(publicKey);
     const availableTransfer = identity.availableTransfer;
 
+    console.log(identity);
+
     if (availableTransfer < gbByteSize) {
       throw new HttpException('Transfer balance too low', HttpStatus.FORBIDDEN);
     }

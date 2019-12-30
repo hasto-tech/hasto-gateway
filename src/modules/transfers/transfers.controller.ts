@@ -32,15 +32,18 @@ export class TransfersControlller {
     if (!identity) {
       const newAnonymousIdentity: IdentityRawInterface = {
         publicKey: dto.whom,
-        onContractIdentityAddress: utils.computeAddress('0x' + dto.whom),
+        onContractIdentityAddress: utils.computeAddress(`0x${dto.whom}`),
+        availableTransfer: dto.quantity,
       };
-      await this.identitiesService.create(newAnonymousIdentity);
+      const tmp = await this.identitiesService.create(newAnonymousIdentity);
+      console.log(tmp);
+    } else {
+      await this.identitiesService.increaseAvailableTransfer(
+        dto.whom,
+        dto.quantity,
+      );
     }
 
-    await this.identitiesService.increaseAvailableTransfer(
-      dto.whom,
-      dto.quantity,
-    );
     return { error: false };
   }
 
